@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Film, Users, Heart, Sparkles, Star } from 'lucide-react-native';
+import { Users, Heart, Sparkles, Star } from 'lucide-react-native';
 import { TMDB } from '@/services/tmdb';
 import { TMDBContent } from '@/types/database';
 
@@ -86,8 +86,11 @@ export default function Login() {
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.authSection}>
         <View style={styles.header}>
-          <Film size={56} color="#e50914" />
-          <Text style={styles.title}>Twovie</Text>
+          <Image
+            source={require('@/assets/images/twovie_whit.svg')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.subtitle}>Decide what to watch together</Text>
         </View>
 
@@ -242,12 +245,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  title: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 16,
-    letterSpacing: -1,
+  logo: {
+    width: 240,
+    height: 65,
+    marginBottom: 16,
   },
   subtitle: {
     fontSize: 17,

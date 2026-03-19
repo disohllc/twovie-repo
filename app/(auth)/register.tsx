@@ -10,10 +10,10 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Film } from 'lucide-react-native';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -65,8 +65,11 @@ export default function Register() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Film size={48} color="#e50914" />
-            <Text style={styles.title}>Create Account</Text>
+            <Image
+              source={require('@/assets/images/twovie_whit.svg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.subtitle}>Join Twovie and start watching together</Text>
           </View>
 
@@ -158,12 +161,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 16,
-    letterSpacing: -1,
+  logo: {
+    width: 240,
+    height: 65,
+    marginBottom: 16,
   },
   subtitle: {
     fontSize: 16,
