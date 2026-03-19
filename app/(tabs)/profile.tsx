@@ -109,6 +109,7 @@ export default function Profile() {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
+            'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
