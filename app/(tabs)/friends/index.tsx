@@ -146,6 +146,10 @@ export default function Friends() {
   };
 
   const handleInviteFriend = async () => {
+    console.log('=== Starting friend invitation ===');
+    console.log('Current user:', profile?.email, profile?.id);
+    console.log('Inviting email:', inviteEmail);
+
     if (!inviteEmail.trim() || !profile) return;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -161,11 +165,14 @@ export default function Friends() {
 
     setInviting(true);
     try {
+      console.log('Looking up profile for:', inviteEmail);
       const { data: existingUser, error: profileError } = await supabase
         .from('profiles')
         .select('id, email, display_name')
         .ilike('email', inviteEmail.trim())
         .maybeSingle();
+
+      console.log('Profile lookup result:', existingUser, profileError);
 
       if (profileError) {
         console.error('Profile lookup error:', profileError);
@@ -178,6 +185,7 @@ export default function Friends() {
         return;
       }
 
+      console.log('Creating invitation...');
       const { data: invitationData, error: inviteError } = await supabase
         .from('friend_invitations')
         .insert({
@@ -188,29 +196,42 @@ export default function Friends() {
         .select()
         .single();
 
+      console.log('Invitation result:', invitationData, inviteError);
+
       if (inviteError) {
+        console.error('Invitation error:', inviteError);
         if (inviteError.code === '23505') {
           Alert.alert('Already Invited', 'You have already invited this user');
         } else {
-          throw inviteError;
+          Alert.alert('Error', `Failed to send invitation: ${inviteError.message}`);
         }
-      } else {
-        const { error: notifError } = await supabase.from('notifications').insert({
-          user_id: existingUser.id,
-          type: 'friend_invitation',
-          title: 'New Friend Request',
-          message: `${profile.display_name || profile.email} wants to connect with you`,
-          data: { invitation_id: invitationData.id, inviter_id: profile.id },
-        });
-
-        if (notifError) {
-          console.error('Notification error:', notifError);
-        }
-
-        Alert.alert('Success', 'Invitation sent!');
-        setInviteEmail('');
-        setShowInviteModal(false);
+        setInviting(false);
+        return;
       }
+
+      console.log('Creating notification...');
+      const notificationPayload = {
+        user_id: existingUser.id,
+        type: 'friend_invitation',
+        title: 'New Friend Request',
+        message: `${profile.display_name || profile.email} wants to connect with you`,
+        data: { invitation_id: invitationData.id, inviter_id: profile.id },
+      };
+      console.log('Notification payload:', notificationPayload);
+
+      const { error: notifError } = await supabase.from('notifications').insert(notificationPayload);
+
+      console.log('Notification result:', notifError);
+
+      if (notifError) {
+        console.error('Notification error:', notifError);
+        Alert.alert('Warning', 'Invitation sent but notification failed. The user may not be notified immediately.');
+      } else {
+        Alert.alert('Success', 'Invitation sent!');
+      }
+
+      setInviteEmail('');
+      setShowInviteModal(false);
     } catch (error) {
       console.error('Error sending invitation:', error);
       Alert.alert('Error', 'Failed to send invitation');
