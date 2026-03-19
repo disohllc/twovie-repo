@@ -91,12 +91,12 @@ export const TMDB = {
   },
 
   getImageUrl(path: string | null, size: 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w500'): string {
-    if (!path) return 'https://via.placeholder.com/500x750/1a1a1a/666666?text=No+Image';
+    if (!path) return 'https://placehold.co/500x750/1a1a1a/666666?text=No+Image';
     return `${IMAGE_BASE_URL}/${size}${path}`;
   },
 
   getBackdropUrl(path: string | null, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w1280'): string {
-    if (!path) return 'https://via.placeholder.com/1280x720/1a1a1a/666666?text=No+Image';
+    if (!path) return 'https://placehold.co/1280x720/1a1a1a/666666?text=No+Image';
     return `${IMAGE_BASE_URL}/${size}${path}`;
   },
 

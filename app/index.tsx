@@ -11,18 +11,12 @@ export default function Index() {
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (user && !inAuthGroup) {
+    if (user) {
       router.replace('/(tabs)');
-    } else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
-    } else if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (!user) {
+    } else {
       router.replace('/(auth)/login');
     }
-  }, [user, loading, profile]);
+  }, [user, loading]);
 
   return (
     <View style={styles.container}>
