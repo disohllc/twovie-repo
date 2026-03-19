@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   Linking,
+  Image,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -279,7 +280,14 @@ export default function Profile() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Twovie v1.0.0</Text>
+        <View style={styles.footerVersion}>
+          <Image
+            source={require('@/assets/images/twovie_whit.svg')}
+            style={styles.footerLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.footerText}>v1.0.0</Text>
+        </View>
         <Text style={styles.footerSubtext}>Made with ❤️ for couples</Text>
       </View>
 
@@ -536,10 +544,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 24,
   },
+  footerVersion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  footerLogo: {
+    width: 50,
+    height: 14,
+    opacity: 0.5,
+  },
   footerText: {
     fontSize: 13,
     color: '#666',
-    marginBottom: 4,
   },
   footerSubtext: {
     fontSize: 12,

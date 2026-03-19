@@ -221,7 +221,14 @@ export default function Login() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Twovie 2026</Text>
+        <View style={styles.footerVersion}>
+          <Image
+            source={require('@/assets/images/twovie_whit.svg')}
+            style={styles.footerLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.footerText}>v1.0.0</Text>
+        </View>
         <Text style={styles.footerSubtext}>Made for couples who love movies</Text>
       </View>
     </ScrollView>
@@ -414,10 +421,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 32,
   },
+  footerVersion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  footerLogo: {
+    width: 50,
+    height: 14,
+    opacity: 0.5,
+  },
   footerText: {
     fontSize: 13,
     color: '#666',
-    marginBottom: 4,
   },
   footerSubtext: {
     fontSize: 12,
