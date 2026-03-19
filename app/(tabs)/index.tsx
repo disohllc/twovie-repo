@@ -14,6 +14,7 @@ import {
   TextInput,
   Keyboard,
   Platform,
+  Linking,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,6 +92,52 @@ export default function Home() {
     setLoading(false);
   };
 
+  const handleUpgrade = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            priceId: 'price_1QsVTTGg3sECJJ8MBMeB2z0B',
+            successUrl: Platform.OS === 'web' ? `${window.location.origin}/?success=true` : undefined,
+            cancelUrl: Platform.OS === 'web' ? `${window.location.origin}/?canceled=true` : undefined,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.url) {
+        if (Platform.OS === 'web') {
+          window.location.href = data.url;
+        } else {
+          await Linking.openURL(data.url);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      if (Platform.OS === 'web') {
+        setToast({ visible: true, message: 'Failed to start checkout', type: 'error' });
+      } else {
+        Alert.alert('Error', 'Failed to start checkout');
+      }
+    }
+  };
+
   const handleAddToWatchlist = async (content?: TMDBContent) => {
     const itemToAdd = content || selectedContent;
     if (!itemToAdd || !profile) return;
@@ -119,7 +166,7 @@ export default function Home() {
           'Free users can only add up to 5 items. Upgrade to Premium for unlimited items!',
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Upgrade', onPress: () => {} },
+            { text: 'Upgrade', onPress: handleUpgrade },
           ]
         );
         setAddingToWatchlist(false);

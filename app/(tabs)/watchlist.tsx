@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Modal,
+  Linking,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +25,7 @@ export default function Watchlist() {
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<WatchlistItem | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' }>({
     visible: false,
     message: '',
@@ -56,6 +58,55 @@ export default function Watchlist() {
       Alert.alert('Error', 'Failed to load watchlist');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    setUpgrading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            priceId: 'price_1QsVTTGg3sECJJ8MBMeB2z0B',
+            successUrl: Platform.OS === 'web' ? `${window.location.origin}/watchlist?success=true` : undefined,
+            cancelUrl: Platform.OS === 'web' ? `${window.location.origin}/watchlist?canceled=true` : undefined,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.url) {
+        if (Platform.OS === 'web') {
+          window.location.href = data.url;
+        } else {
+          await Linking.openURL(data.url);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      if (Platform.OS === 'web') {
+        setToast({ visible: true, message: 'Failed to start checkout', type: 'error' });
+      } else {
+        Alert.alert('Error', 'Failed to start checkout');
+      }
+    } finally {
+      setUpgrading(false);
     }
   };
 
@@ -221,8 +272,16 @@ export default function Watchlist() {
           <Text style={styles.premiumText}>
             Upgrade to Premium for unlimited items
           </Text>
-          <TouchableOpacity style={styles.premiumButton}>
-            <Text style={styles.premiumButtonText}>Upgrade - $1.99</Text>
+          <TouchableOpacity
+            style={[styles.premiumButton, upgrading && styles.premiumButtonDisabled]}
+            onPress={handleUpgrade}
+            disabled={upgrading}
+          >
+            {upgrading ? (
+              <ActivityIndicator size="small" color="#000" />
+            ) : (
+              <Text style={styles.premiumButtonText}>Upgrade - $1.99</Text>
+            )}
           </TouchableOpacity>
         </View>
       )}
@@ -379,6 +438,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 8,
+  },
+  premiumButtonDisabled: {
+    backgroundColor: '#999',
+    opacity: 0.7,
   },
   premiumButtonText: {
     color: '#fff',
