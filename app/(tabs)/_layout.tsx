@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Hop as Home, List, Users, Settings } from 'lucide-react-native';
+import { View, Image, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -10,7 +11,7 @@ export default function TabLayout() {
           backgroundColor: '#141414',
           borderTopColor: '#2a2a2a',
           borderTopWidth: 1,
-          height: 70,
+          height: 90,
           paddingBottom: 10,
           paddingTop: 10,
         },
@@ -24,6 +25,18 @@ export default function TabLayout() {
         tabBarIconStyle: {
           marginTop: 4,
         },
+        tabBarBackground: () => (
+          <View style={styles.tabBarBackground}>
+            <View style={styles.tabBarContent} />
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('@/assets/images/twovie_whit.svg')}
+                style={styles.footerLogo}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        ),
       }}
     >
       <Tabs.Screen
@@ -57,3 +70,26 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarBackground: {
+    flex: 1,
+    backgroundColor: '#141414',
+  },
+  tabBarContent: {
+    flex: 1,
+  },
+  logoContainer: {
+    position: 'absolute',
+    bottom: 2,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingBottom: 2,
+  },
+  footerLogo: {
+    width: 60,
+    height: 16,
+    opacity: 0.4,
+  },
+});

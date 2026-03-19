@@ -299,7 +299,11 @@ export default function Home() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Twovie</Text>
+        <Image
+          source={require('@/assets/images/twovie_whit.svg')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.headerButton}
@@ -771,10 +775,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     backgroundColor: '#000',
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#e50914',
+  headerLogo: {
+    width: 120,
+    height: 32,
   },
   headerActions: {
     flexDirection: 'row',
