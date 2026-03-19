@@ -38,7 +38,7 @@ export default function Home() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TMDBContent[]>([]);
-  const [searchActive, setSearchActive] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -225,12 +225,15 @@ export default function Home() {
     setShowTrailer(false);
   };
 
-  const handleSearchFocus = () => {
-    setSearchActive(true);
+  const handleSearchOpen = () => {
+    setSearchOpen(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
   };
 
   const handleSearchClose = () => {
-    setSearchActive(false);
+    setSearchOpen(false);
     setSearchQuery('');
     setSearchResults([]);
     Keyboard.dismiss();
@@ -250,101 +253,119 @@ export default function Home() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Twovie</Text>
-        <TouchableOpacity
-          style={styles.notificationButton}
-          onPress={() => setShowNotifications(true)}
-        >
-          <Bell size={24} color="#fff" />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <View style={[styles.searchBar, searchActive && styles.searchBarActive]}>
-          <Search size={20} color="#999" />
-          <TextInput
-            ref={searchInputRef}
-            style={styles.searchInput}
-            placeholder="Search movies and TV shows..."
-            placeholderTextColor="#666"
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-            onFocus={handleSearchFocus}
-          />
-          {searchActive && (
-            <TouchableOpacity onPress={handleSearchClose}>
-              <X size={20} color="#999" />
-            </TouchableOpacity>
-          )}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={handleSearchOpen}
+          >
+            <Search size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => setShowNotifications(true)}
+          >
+            <Bell size={24} color="#fff" />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
-      {searchActive && (
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={handleSearchClose}
+      {searchOpen && (
+        <Modal
+          visible={searchOpen}
+          animationType="fade"
+          transparent
+          onRequestClose={handleSearchClose}
         >
-          <View style={styles.searchResultsContainer}>
-            <TouchableOpacity activeOpacity={1}>
-              {searchLoading ? (
-                <View style={styles.searchLoadingContainer}>
-                  <ActivityIndicator size="large" color="#e50914" />
+          <View style={styles.searchModalContainer}>
+            <View style={styles.searchModalContent}>
+              <View style={styles.searchModalHeader}>
+                <View style={styles.searchBarModal}>
+                  <Search size={20} color="#999" />
+                  <TextInput
+                    ref={searchInputRef}
+                    style={styles.searchInput}
+                    placeholder="Search movies and TV shows..."
+                    placeholderTextColor="#666"
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    autoFocus
+                  />
                 </View>
-              ) : searchQuery.length >= 3 && searchResults.length > 0 ? (
-                <FlatList
-                  data={searchResults}
-                  keyExtractor={(item) => `search-${item.id}`}
-                  renderItem={({ item }) => (
-                    <View style={styles.searchResultItem}>
-                      <Image
-                        source={{ uri: TMDB.getImageUrl(item.poster_path, 'w185') }}
-                        style={styles.searchResultPoster}
-                      />
-                      <View style={styles.searchResultInfo}>
-                        <Text style={styles.searchResultTitle}>
-                          {item.title || item.name}
-                        </Text>
-                        <Text style={styles.searchResultType}>
-                          {item.media_type === 'movie' ? 'Movie' : 'TV Show'}
-                        </Text>
+                <TouchableOpacity
+                  style={styles.searchModalCloseButton}
+                  onPress={handleSearchClose}
+                >
+                  <X size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.searchResultsWrapper}>
+                {searchLoading ? (
+                  <View style={styles.searchLoadingContainer}>
+                    <ActivityIndicator size="large" color="#e50914" />
+                  </View>
+                ) : searchQuery.length >= 3 && searchResults.length > 0 ? (
+                  <FlatList
+                    data={searchResults}
+                    keyExtractor={(item) => `search-${item.id}`}
+                    renderItem={({ item }) => (
+                      <View style={styles.searchResultItem}>
+                        <Image
+                          source={{ uri: TMDB.getImageUrl(item.poster_path, 'w185') }}
+                          style={styles.searchResultPoster}
+                        />
+                        <View style={styles.searchResultInfo}>
+                          <Text style={styles.searchResultTitle}>
+                            {item.title || item.name}
+                          </Text>
+                          <Text style={styles.searchResultType}>
+                            {item.media_type === 'movie' ? 'Movie' : 'TV Show'}
+                          </Text>
+                        </View>
+                        <View style={styles.searchResultActions}>
+                          <TouchableOpacity
+                            style={styles.searchResultButton}
+                            onPress={() => {
+                              handleSearchClose();
+                              handleContentPress(item);
+                            }}
+                          >
+                            <Info size={20} color="#fff" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.searchResultButton}
+                            onPress={() => handleAddToWatchlist(item)}
+                          >
+                            <Plus size={20} color="#fff" />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                      <View style={styles.searchResultActions}>
-                        <TouchableOpacity
-                          style={styles.searchResultButton}
-                          onPress={() => {
-                            handleSearchClose();
-                            handleContentPress(item);
-                          }}
-                        >
-                          <Info size={20} color="#fff" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.searchResultButton}
-                          onPress={() => handleAddToWatchlist(item)}
-                        >
-                          <Plus size={20} color="#fff" />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  )}
-                />
-              ) : searchQuery.length >= 3 ? (
-                <View style={styles.searchEmptyContainer}>
-                  <Text style={styles.searchEmptyText}>No results found</Text>
-                </View>
-              ) : (
-                <View style={styles.searchEmptyContainer}>
-                  <Text style={styles.searchEmptyText}>Type at least 3 characters to search</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+                    )}
+                  />
+                ) : searchQuery.length >= 3 ? (
+                  <View style={styles.searchEmptyContainer}>
+                    <Text style={styles.searchEmptyText}>No results found</Text>
+                  </View>
+                ) : (
+                  <View style={styles.searchEmptyContainer}>
+                    <Text style={styles.searchEmptyText}>Type at least 3 characters to search</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            <Toast
+              visible={toast.visible}
+              message={toast.message}
+              type={toast.type}
+              onHide={() => setToast({ ...toast, visible: false })}
+            />
           </View>
-        </TouchableOpacity>
+        </Modal>
       )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -482,6 +503,12 @@ export default function Home() {
               </>
             )}
           </View>
+          <Toast
+            visible={toast.visible}
+            message={toast.message}
+            type={toast.type}
+            onHide={() => setToast({ ...toast, visible: false })}
+          />
         </View>
       </Modal>
 
@@ -513,13 +540,6 @@ export default function Home() {
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
         onNotificationCountChange={setUnreadCount}
-      />
-
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onHide={() => setToast({ ...toast, visible: false })}
       />
     </View>
   );
@@ -709,7 +729,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e50914',
   },
-  notificationButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerButton: {
     position: 'relative',
     padding: 8,
   },
@@ -730,12 +755,23 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
   },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#000',
+  searchModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    paddingTop: 60,
   },
-  searchBar: {
+  searchModalContent: {
+    flex: 1,
+  },
+  searchModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  searchBarModal: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1a1a1a',
@@ -744,9 +780,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  searchBarActive: {
     borderColor: '#e50914',
   },
   searchInput: {
@@ -754,22 +787,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    zIndex: 10,
-    paddingTop: 180,
+  searchModalCloseButton: {
+    padding: 8,
   },
-  searchResultsContainer: {
-    backgroundColor: '#1a1a1a',
-    marginHorizontal: 16,
-    borderRadius: 12,
-    maxHeight: '80%',
-    overflow: 'hidden',
+  searchResultsWrapper: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
   searchLoadingContainer: {
     padding: 48,
